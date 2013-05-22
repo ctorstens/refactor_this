@@ -1,9 +1,4 @@
-<%= form_for Todo.new do |f| %>
-  <%= f.label :title %>
-  <%= f.text_field :title %>
-  <%= f.label :body %>
-  <%= f.text_field :body %>
-  <%= f.label :list_name %>
-  <%= f.text_field :list_name %>
+<%= form_for @todo do |f| %>
+  <%= render "todo_form", :f => f %>
   <%= f.submit %>
 <% end %>

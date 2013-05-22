@@ -1,8 +1,8 @@
 class TodosController < ApplicationController
-  before_filter :load_todos
 
   def index
     @todos = Todo.all
+    @todo_lists = @todos.map(&:list_name).uniq
   end
 
   def new
@@ -14,17 +14,9 @@ class TodosController < ApplicationController
   end
 
   def create
-    list_name = params[:todo].delete(:list_name)
-    list_name = list_name.downcase
-    list_name = list_name.gsub ' ', '-'
-    @todo = Todo.new params[:todo]
+    @todo = Todo.new(params[:todo])
     if @todo.save
-      @todo.update_attributes :list_name => list_name
-      @todos = Todo.where :list_name => list_name
-      @todos.each do |todo|
-        todo.update_attributes :todo_count => @todos.count
-        todo.save
-      end
+      update_lists_count(params[:todo][:list_name])
       redirect_to root_url
     else
       render :new
@@ -32,21 +24,13 @@ class TodosController < ApplicationController
   end
 
   def edit
-    @todo = Todo.find params[:id]
+    @todo = Todo.find(params[:id])
   end
 
   def update
     @todo = Todo.find params[:id]
-    list_name = params[:todo].delete(:list_name)
-    list_name = list_name.downcase
-    list_name = list_name.gsub ' ', '-'
-    if @todo.update_attributes params[:todo]
-      @todo.update_attributes :list_name => list_name
-      @todos = Todo.where :list_name => list_name
-      @todos.each do |todo|
-        todo.update_attributes :todo_count => @todos.count
-        todo.save
-      end
+    if @todo.update_attributes(params[:todo])
+      update_lists_count(params[:todo][:list_name])
       redirect_to @todo
     else
       render :edit
@@ -55,7 +39,12 @@ class TodosController < ApplicationController
 
   private
 
-  def load_todos
-    @todos = Todo.all
+  def update_lists_count(list_name)
+    @todos = Todo.where :list_name => list_name
+    @todos.each do |todo|
+      todo.update_attributes :todo_count => @todos.count
+      todo.save
+    end
   end
+
 end
